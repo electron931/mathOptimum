@@ -1,0 +1,256 @@
+<% layout('layout/page') %>
+
+<section class="container">
+	
+	<div class="overlay"></div>
+
+    <h3>Inverse Matrix Calculator</h3>
+
+    <div class="formContainer">
+
+	    <select class="form-control matrixDimensionSelect">
+			<option>1</option>
+			<option>2</option>
+			<option selected="selected">3</option>
+			<option>4</option>
+			<option>5</option>
+			<option>6</option>
+			<option>7</option>
+			<option>8</option>
+			<option>9</option>
+			<option>10</option>
+			<option>11</option>
+			<option>12</option>
+			<option>13</option>
+			<option>14</option>
+			<option>15</option>
+			<option>16</option>
+			<option>17</option>
+			<option>18</option>
+			<option>19</option>
+			<option>20</option>
+			<option>21</option>
+			<option>22</option>
+			<option>23</option>
+			<option>24</option>
+			<option>25</option>
+			<option>26</option>
+			<option>27</option>
+			<option>28</option>
+			<option>29</option>
+			<option>30</option>
+			<option>31</option>
+			<option>32</option>
+			<option>33</option>
+			<option>34</option>
+			<option>35</option>
+			<option>36</option>
+			<option>37</option>
+			<option>38</option>
+			<option>39</option>
+			<option>40</option>
+			<option>41</option>
+			<option>42</option>
+			<option>43</option>
+			<option>44</option>
+			<option>45</option>
+			<option>46</option>
+			<option>47</option>
+			<option>48</option>
+			<option>49</option>
+			<option>50</option>
+		</select>
+
+		<button type="submit" class="btn btn-default rightButton" id="showPopup">Set matrix</button>
+
+	</div>
+
+
+	<div id="popup">		
+		<form role="form" action="inverseMatrix/calculate" method="POST" class="matrixForm">
+			<input type="hidden" name="dimension" value="" id="dimensionField">
+			<button type="reset" class="btn btn-default reset">Reset</button>
+			<button type="submit" class="btn btn-default rightButton">Calculate</button>
+		</form>
+	</div>
+
+
+	<script>
+
+		
+
+		$("#showPopup").click(function() {
+			var popup = $("#popup");
+			var overlay = $(".overlay");
+
+			var dimension = $(".matrixDimensionSelect").val();
+
+			$("#dimensionField").val(dimension);
+
+			createForm(dimension);
+			
+			recalculateTopLeft();
+
+			overlay.show();
+			popup.fadeIn();
+
+			overlay.click(function() {
+				overlay.hide();
+				popup.hide();
+			});
+		});
+
+
+		$(".overlay").click(function() {
+			$("#popup .matrixForm table").remove();
+		});
+
+
+		$(".matrixForm").submit(function(e) {
+			var inputValue;
+			var isError = false;
+			
+			clearCells();
+
+			$(".matrixForm table tbody input").each(function() {
+				try {
+					inputValue = math.eval($(this).val());
+				}
+				catch(err) {
+					$(this).addClass("input_error");
+					isError = true;
+					
+				}
+				console.log(inputValue);
+			});
+
+			if (isError || checkForEmptiness()) {
+				e.preventDefault(); 		// Cancel the submit
+            	return false;
+			}
+
+		});
+
+
+		$(".reset").click(function() {
+			clearCells();
+		});
+
+		
+
+
+		$(window).resize(function(){ 
+			recalculateTopLeft();
+		});
+
+
+		function checkForEmptiness() {
+			var isEmpty = false;
+			$(".matrixForm table tbody input").each(function() {
+				if ($(this).val() == '') {
+					isEmpty = true;
+					$(this).addClass("input_error");
+				}	
+			});
+			return isEmpty;
+		}
+
+
+		function clearCells() {
+			$(".matrixForm table tbody input.input_error").each(function() {
+				$(this).removeClass("input_error");	
+			});
+		}
+
+
+		function createForm(dimension) {
+			var form = '<table class="table"><tbody><tr><th>#</th>';
+			for (var i = 1; i <= dimension; i++) {
+				form += '<th>' + i + '</th>';
+			}
+			form += '</tr>';
+
+			for (var i = 1; i <= dimension; i++) {
+				form += '<tr>';
+				for (var j = 1; j <= dimension; j++) {
+					if (j == 1) {
+						form += '<th>' + i + '</th>';
+					}
+					form += '<td><input type="text" onkeypress="return numbersOnly(this, event)" class="form-control" name="matrixElement' + i + '' + j + '"></td>';
+				}
+				form += '</tr>';
+			}
+
+			form += '</tbody></table>';
+
+			$(".matrixForm").prepend(form);
+
+		}
+
+
+		function recalculateTopLeft() {
+			var popup = $("#popup");
+
+			var sceenWidth = $(window).width();
+			var screenHeight = $(window).height();
+
+			var popupWidth = popup.width();
+			var popupHeight = popup.height();
+
+			var paddingTop = popup.css("padding-top");
+			var paddingBottom = popup.css("padding-bottom");
+			var paddingLeft = popup.css("padding-left");
+			var paddingRight = popup.css("padding-right");
+
+			paddingTop = parseInt(paddingTop.substr(0, paddingTop.length - 2));
+			paddingBottom = parseInt(paddingBottom.substr(0, paddingBottom.length - 2));
+			paddingLeft = parseInt(paddingLeft.substr(0, paddingLeft.length - 2));
+			paddingRight = parseInt(paddingRight.substr(0, paddingRight.length - 2));
+
+
+			var left = ( ( (sceenWidth - popupWidth - paddingLeft - paddingRight) / 2 ) / sceenWidth ) * 100;
+			var top = ( ( (screenHeight - popupHeight - paddingTop - paddingBottom) / 2 ) / screenHeight ) * 100;
+			
+
+			popup.css({
+				top: top + '%',
+				left: left + '%'
+			});
+		}
+
+
+		function numbersOnly(field, e, dec) {
+			var key;
+			var keychar;
+
+			if (window.event)
+			   key = window.event.keyCode;
+			else if (e)
+			   key = e.which;
+			else
+			   return true;
+			keychar = String.fromCharCode(key);
+
+			// control keys
+			if ((key==null) || (key==0) || (key==8) || 
+			    (key==9) || (key==13) || (key==27) )
+			   return true;
+
+			// numbers
+			else if ((("0123456789./-+*()").indexOf(keychar) > -1))
+			   return true;
+
+			// decimal point jump
+			else if (dec && (keychar == ".")) {
+			   field.form.elements[dec].focus();
+			   return false;
+			}
+			else
+			   return false;
+		}
+
+		
+
+	</script>
+    
+</section> 
