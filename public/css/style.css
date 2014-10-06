@@ -1,6 +1,7 @@
 body {
   margin: 0;
   padding: 0;
+  padding-bottom: 40px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
@@ -51,6 +52,30 @@ a {
 	vertical-align: middle !important; 
 }
 
+.table-bordered {
+	margin-bottom: 20px;
+}
+
+.table-bordered td {
+	text-align: center;
+}
+
 .input_error {
 	border: 1px solid rgba(255, 0, 0, 1);
+}
+
+.alpha table {
+	display: inline-table;
+	margin-bottom: 20px;
+}
+
+.imp {
+	font-size: 18px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-right: 10px;
+	font-family: inherit;
+	font-weight: 500;
+	line-height: 1.1;
+	color: inherit;
 }
