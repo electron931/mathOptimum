@@ -38,9 +38,10 @@ a {
 	display: inline-block;
 }
 
-.rightButton {
+.rightButton, .submitButton {
 	float: right;
 }
+
 
 .formContainer {
 	width: 40%;
@@ -78,4 +79,11 @@ a {
 	font-weight: 500;
 	line-height: 1.1;
 	color: inherit;
+}
+
+@media only screen and (max-width: 460px) {
+	.rightButton {
+		float: none;
+		margin-top: 15px;
+	}
 }
