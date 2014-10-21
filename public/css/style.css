@@ -81,6 +81,17 @@ a {
 	color: inherit;
 }
 
+.form-control {
+	min-width: 50px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
 @media only screen and (max-width: 460px) {
 	.rightButton {
 		float: none;
