@@ -72,6 +72,7 @@
 			<button type="reset" class="btn btn-default reset">Reset</button>
 			<button type="button" class="btn btn-default fill_with_zero">Fill empty cells with zero</button>
 			<button type="submit" class="btn btn-default submitButton">Calculate</button>
+			<label class="withOutput"><input type="checkbox" name="isOutput" checked>With Output</label>
 		</form>
 	</div>
 
@@ -190,7 +191,7 @@
 					if (j == 1) {
 						form += '<th>' + i + '</th>';
 					}
-					form += '<td><input type="number" size="35" onkeypress="return numbersOnly(this, event)" class="form-control" name="matrixElementi' + i + 'j' + j + '"></td>';
+					form += '<td><input type="text" size="35" onkeypress="return numbersOnly(this, event)" class="form-control" name="matrixElementi' + i + 'j' + j + '"></td>';
 				}
 				form += '</tr>';
 			}

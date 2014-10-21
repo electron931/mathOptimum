@@ -42,6 +42,10 @@ a {
 	float: right;
 }
 
+.withOutput {
+	float: right;
+	margin-right: 20px;
+}
 
 .formContainer {
 	width: 40%;

@@ -161,13 +161,13 @@ method.inverse = function() {
 
 
 	//rounding
-	for (var i = 0; i < dimension; i++) {
+	/*for (var i = 0; i < dimension; i++) {
 		for (var j = 0; j < dimension; j++) {
 			if (isFloat(resultArray[i][j])) {
 				resultArray[i][j] = floatToRat(resultArray[i][j]);
 			}
 		}
-	}
+	}*/
 
 	inverseMatrix = new Matrix(dimension, dimension, resultArray);
 	
