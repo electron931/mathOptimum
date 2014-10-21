@@ -139,13 +139,13 @@ exports.post = function(req, res) {
 
 
 		//rounding
-		for (var i = 0; i < dimension; i++) {
+		/*for (var i = 0; i < dimension; i++) {
 			for (var j = 0; j < dimension; j++) {
 				if (isFloat(resultArray[i][j])) {
 					resultArray[i][j] = floatToRat(resultArray[i][j]);
 				}
 			}
-		}
+		}*/
 
 		inverseMatrix = new Matrix(dimension, dimension, resultArray);
 
@@ -189,6 +189,12 @@ function contains(a, obj) {
 
 
 function floatToRat(x) {
+	if (x == 0) {
+		return "0";
+	}
+	else if (x == 1) {
+		return "1";
+	}
     var tolerance = 1.0E-6;
     var h1 = 1; 
     var h2 = 0;
@@ -221,7 +227,7 @@ function outputMatrix(matrix) {
 	for (var i = 0; i < matrix.rowsNumber; i++) {
 		output += '<tr>';
 		for (var j = 0; j < matrix.colsNumber; j++) {
-			output += '<td>' + matrix.elements[i][j] + '</td>';
+			output += '<td>' + floatToRat(matrix.elements[i][j]) + '</td>';
 		}
 		output += '</tr>';
 	}
