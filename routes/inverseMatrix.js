@@ -189,11 +189,8 @@ function contains(a, obj) {
 
 
 function floatToRat(x) {
-	if (x == 0) {
-		return "0";
-	}
-	else if (x == 1) {
-		return "1";
+	if (!isFloat(x)) {
+		return "" + x;
 	}
     var tolerance = 1.0E-6;
     var h1 = 1; 
