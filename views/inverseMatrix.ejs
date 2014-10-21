@@ -70,6 +70,7 @@
 		<form role="form" action="/inverseMatrix/calculate" method="POST" class="matrixForm">
 			<input type="hidden" name="dimension" value="" id="dimensionField">
 			<button type="reset" class="btn btn-default reset">Reset</button>
+			<button type="button" class="btn btn-default fill_with_zero">Fill empty cells with zero</button>
 			<button type="submit" class="btn btn-default submitButton">Calculate</button>
 		</form>
 	</div>
@@ -136,6 +137,10 @@
 			clearCells();
 		});
 
+
+		$(".fill_with_zero").click(function() {
+			fillEmptyCellsWithZero();
+		});
 		
 
 
@@ -159,6 +164,15 @@
 		function clearCells() {
 			$(".matrixForm table tbody input.input_error").each(function() {
 				$(this).removeClass("input_error");	
+			});
+		}
+
+
+		function fillEmptyCellsWithZero() {
+			$(".matrixForm table tbody input").each(function() {
+				if($(this).val() == "") {
+					$(this).val("0");
+				}
 			});
 		}
 
