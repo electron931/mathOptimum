@@ -159,29 +159,39 @@ method.inverse = function() {
 		resultArray.push(rows[setS[i] - 1]);
 	}
 
-
-	//rounding
-	/*for (var i = 0; i < dimension; i++) {
-		for (var j = 0; j < dimension; j++) {
-			if (isFloat(resultArray[i][j])) {
-				resultArray[i][j] = floatToRat(resultArray[i][j]);
-			}
-		}
-	}*/
-
 	inverseMatrix = new Matrix(dimension, dimension, resultArray);
 	
 	return inverseMatrix;
 };
 
+//static methods
+Matrix.createMatrixFromVectors = function(vectors, isHorisontal) {
+
+	var array = [];
+	if (isHorisontal) {
+		for (var i = 0; i < vectors.length; i++) {
+			array.push(vectors[i]);
+		}
+
+		return new Matrix(vectors.length, vectors[0].length, array);
+	}
+	else {
+		for (var i = 0; i < vectors[0].length; i++) {
+			array[i] = [];
+			for (var j = 0; j < vectors.length; j++) {
+				array[i][j] = vectors[j][i];
+			}
+		}
+
+		return new Matrix(vectors[0].length, vectors.length, array);
+	}
+
+}
 
 
 
-function isFloat(n) {
-   return n % 1 != 0;
-};
 
-
+/* Helper functions */
 
 function contains(a, obj) {
     for (var index = 0; index < a.length; index++) {
@@ -192,33 +202,6 @@ function contains(a, obj) {
     return false;
 };
 
-
-
-function floatToRat(x) {
-    var tolerance = 1.0E-6;
-    var h1 = 1; 
-    var h2 = 0;
-    var k1 = 0; 
-    var k2 = 1;
-    var posX = Math.abs(x);
-    var b = posX;
-    do {
-        var a = Math.floor(b);
-        var aux = h1; 
-        h1 = a * h1 + h2; 
-        h2 = aux;
-        aux = k1;
-        k1 = a * k1 + k2; 
-        k2 = aux;
-        b = 1 / (b - a);
-    } while (Math.abs(posX - h1 / k1) > posX * tolerance);
-    
-    if (x < 0) {
-    	return "-" + h1 + "/" + k1;
-    }
-
-    return h1 + "/" + k1;
-};
 
 
 
