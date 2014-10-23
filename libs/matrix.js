@@ -164,6 +164,28 @@ method.inverse = function() {
 	return inverseMatrix;
 };
 
+
+method.removeRow = function(rowNumber) {
+	this.elements.splice(rowNumber - 1, 1);
+	
+	return new Matrix(this.rowsNumber - 1, this.colsNumber, this.elements);
+}
+
+method.removeCol = function(colNumber) {
+	var array = [];
+	for (var i = 0; i < this.rowsNumber; i++) {
+		array[i] = [];
+		for (var j = 0; j < this.colsNumber; j++) {
+			if (j == (colNumber - 1)) {
+				continue;
+			}
+			array[i].push(this.elements[i][j]);
+		}
+	}
+
+	return new Matrix(this.rowsNumber, this.colsNumber - 1, array);
+}
+
 //static methods
 Matrix.createMatrixFromVectors = function(vectors, isHorisontal) {
 
