@@ -1,6 +1,9 @@
 var mathjs = require('mathjs');
 var Matrix = require('../libs/matrix');
+var helper = require('../libs/helper');
 
+
+var EPSILON = 0.00000000001;
 
 exports.get = function(req, res) {
     res.render('simplexMethod');
@@ -8,187 +11,117 @@ exports.get = function(req, res) {
 
 exports.post = function(req, res) {
 
-	//input data (already with slack variables and with proper signs)
-
-	var vector1 =    [ 1, 1, 1, 1, 1, 0, 0, 0, 0, 40 ];
-	var vector2 =    [ 2, 1, -1, -1, 0, -1, 0, 1, 0, 10 ];
-	var vector3 =    [ 0, -1, 0, 1, 0, 0, -1, 0, 1, 10 ];
-	var vector4 =    [ -0.5, -3, -1, -4, 0, 0, 0, 0, 0, 0 ];				//if f(x) -> min, inverse signs
-	var lastVector = [ -2, 0, 1, 0, 0, 1, 1, 0, 0, 20 ];					//G
-
-
-	var matrix = Matrix.createMatrixFromVectors([ vector1, vector2, vector3, vector4, lastVector ], true);
-	console.log('Input: ');
-	console.log(matrix);
-
-	var hasSolution = true;
-	var output = '';
-	var count = 1;
-	var EPSILON = 0.00000000001;
+	var m = 3;
+	var n = 6;
+	var b = new Matrix(m, 1, [[240], [200], [160]]);
+	var A = new Matrix(m, n, [[2, 3, 6, 1, 0, 0], [4, 2, 4, 0, 1, 0], [4, 6, 8, 0, 0, 1]]);
+	var c = new Matrix(1, n, [[4, 5, 4, 0, 0, 0]]);
+	var Ai = getMatrixColumns(A);
+	var x = getBasisPlan(Ai, b);
+	var Js = getJs(x, b);
+	var Jb = Js.Jb;
+	var Jn = Js.Jn;
+	var J = Js.J;
+	var Ab = getBasisMatrix(A, Jb);
+	var B = Ab.inverse();
 
 
-	while(true) {
+	var count = 0;
 
-		//rounding
-		roundMatrix(matrix, EPSILON);			//small numbers to 0
-
-		var obj = getMinNegativeAndBasisColNumber(matrix.getRow(matrix.rowsNumber));
-		if (obj.minNegative >= 0 || count > 1000) {						//add epsilon
-			output += outputMatrix(matrix);
-
-			if (matrix.getValue(matrix.rowsNumber, matrix.colsNumber) == 0) {
-				hasSolution = true;
+	while (true && count < 100) {
+		count++;
+		var cb = getCb(c, Jb);
+		var u = cb.multiply(B);
+		var deltas = getDeltas(u, A, c, Jn);
+		var stop = true;
+		var minDelta;
+		var j0;
+		for (var i = 0; i < deltas.length; i++) {
+			if (deltas[i] < 0 && minDelta == undefined) {
+				stop = false;
+				minDelta = deltas[i];
+				j0 = Jn[i];
 			}
+			else if (deltas[i] < 0 && deltas[i] < minDelta) {
+				minDelta = deltas[i];
+				j0 = Jn[i];
+			}
+		}
 
+		minDelta = undefined;
+
+		if (stop) {		//STOP
+			console.log('Optimum has been found: ' + x);
 			break;
 		}
 
-		var basisColNumber = obj.basisColNumber;
-		var basisRowNumber = getBasisRowNumber(matrix, obj.basisColNumber);
-
-		var basis = getBasis(matrix);
-		var outBasisColNumber = getOutBasisColNumber(matrix.getRow(basisRowNumber), basis);
-		
-		var x = matrix.getValue(basisRowNumber, basisColNumber);
-		var inverseX = 1 / x;
-
-		for (var i = 1; i <= matrix.colsNumber; i++) {
-			matrix.insertValue( basisRowNumber, i, matrix.getValue(basisRowNumber, i) * inverseX );
-		}
-
-
-		for (var i = 1; i <= matrix.rowsNumber; i++) {
-			var basisColValue = matrix.getValue(i, basisColNumber);
-
-			for (var j = 1; j <= matrix.colsNumber; j++) {
-				if (i == basisRowNumber) {
-					continue;
-				}
-
-				if (basisColValue == 0) {						//add epsilon
-					continue;
-				}
-				else if (basisColValue > 0) {
-					matrix.insertValue( i, j, matrix.getValue(i, j) - matrix.getValue(basisRowNumber, j) * Math.abs(basisColValue) );
-				}
-				else {					//< 0
-					matrix.insertValue( i, j, matrix.getValue(i, j) + matrix.getValue(basisRowNumber, j) * Math.abs(basisColValue) );
-				}
+		//step 3
+		var z  = B.multiply(A.getCol(j0));
+		var hasSolution = false;
+		for (var i = 1; i <= z.rowsNumber; i++) {
+			if (z.getValue(i, 1) > 0) {
+				hasSolution = true;
 			}
 		}
 
-		matrix = matrix.removeCol(outBasisColNumber);
-		count++;
 
-	}		//end while
+		if (!hasSolution) {		//STOP
+			console.log('No solution');
+			break;
+		}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	if (hasSolution) {
-
-		matrix = matrix.removeRow(matrix.rowsNumber);
-
-		var count = 1;
-
-		var EPSILON = 0.00000000001;
-
-		
-
-		while(true) {
-
-			//rounding
-			roundMatrix(matrix, EPSILON);			//small numbers to 0
-
-			var obj = getMinNegativeAndBasisColNumber(matrix.getRow(matrix.rowsNumber));
-			if (obj.minNegative >= 0 || count > 1000) {						//add epsilon
-				//stop
-				output += 'STOP';
-				output += outputMatrix(matrix);
-				output += 'Optimum: P = ' + matrix.getValue(matrix.rowsNumber, matrix.colsNumber);
-				//console.log('result: ');
-				//console.log(matrix);
-
-				if (matrix.getValue(matrix.rowsNumber, matrix.colsNumber) == 0) {
-					//hasSolution = true;
+		//step 4
+		var Q;
+		var s;
+		for (var i = 1; i <= m; i++) {
+			if (z.getValue(i, 1) > 0) {
+				var temp = x[Jb[i - 1] - 1] / z.getValue(i, 1);
+				if (Q == undefined) {
+					Q = temp;
+					s = i;
 				}
-
-				break;
-			}
-
-			var basisColNumber = obj.basisColNumber;
-			var basisRowNumber = getBasisRowNumber(matrix, obj.basisColNumber);
-			console.log( 'basisColNumber: ' + basisColNumber);
-			console.log( 'basisRowNumber: ' + basisRowNumber);
-
-			var x = matrix.getValue(basisRowNumber, basisColNumber);
-
-			console.log('x = ' + x);
-
-			var inverseX = 1 / x;
-
-			for (var i = 1; i <= matrix.colsNumber; i++) {
-				matrix.insertValue( basisRowNumber, i, matrix.getValue(basisRowNumber, i) * inverseX );
-			}
-
-
-			for (var i = 1; i <= matrix.rowsNumber; i++) {
-				var basisColValue = matrix.getValue(i, basisColNumber);
-
-				for (var j = 1; j <= matrix.colsNumber; j++) {
-					if (i == basisRowNumber) {
-						continue;
-					}
-
-					if (basisColValue == 0) {						//add epsilon
-						continue;
-					}
-					else if (basisColValue > 0) {
-						matrix.insertValue( i, j, matrix.getValue(i, j) - matrix.getValue(basisRowNumber, j) * Math.abs(basisColValue) );
-					}
-					else {					//< 0
-						matrix.insertValue( i, j, matrix.getValue(i, j) + matrix.getValue(basisRowNumber, j) * Math.abs(basisColValue) );
-					}
+				else if (temp < Q) {
+					Q = temp;
+					s = i;
 				}
 			}
-
-			count++;
-
-		}		//end while
+		}
 
 
-	}
-	else {
-		console.log('NO SOLUTION');
+		var Js = Jb[s - 1];
+
+
+		//step 5
+		var JnIndex = 0;
+		for (var i = 1; i <= n; i++) {
+			if (i == Jn[JnIndex]) {
+				x[i - 1] = 0;
+				JnIndex++;
+			}
+		}
+		x[j0 - 1] = Q;
+		for (var i = 0; i < Jb.length; i++) {
+			x[Jb[i] - 1] = x[Jb[i ] - 1] - Q * z.getValue(i + 1, 1);
+		}
+
+		var JsIndex = Jb.indexOf(Js);
+		Jb[JsIndex] = j0;
+		Jb.sort();
+
+		Jn = getNewJn(J, Jb);
+
+		//step 6
+		Ab = getBasisMatrix(A, Jb);
+		B = Ab.inverse();
+
+		Q = undefined;
+		s = undefined;
+		j0 - undefined;
 	}
 
 
-
-	res.render('simplexMethodCalculate', {output: output});
-};
-
+	res.end('All right');
+}
 
 
 
@@ -196,211 +129,128 @@ exports.post = function(req, res) {
 
 
 
+/*
+	Functions
+*/
 
+function getMatrixColumns(matrix) {
+	var matrixColumns = [];
+	for (var i = 1; i <= matrix.colsNumber; i++) {
+		matrixColumns.push(matrix.getCol(i));
+	}
 
+	return matrixColumns;
+}
 
+function getBasisPlan(matrixColumns, b) {
+	var bIndex = 1;
+	var x = [];
+	for (var i = 0; i < matrixColumns.length; i++) {
+		if (isColumnBasis(matrixColumns[i])) {
+			x.push(b.getValue(bIndex, 1));
+			bIndex++;
+		}
+		else {
+			x.push(0);
+		}
+	}
 
+	return x;
+}
 
-
-
-
-
-
-
-
-function getBasis(matrix) {
-	var basisArray = [];
-	var isBasis = false;
+function isColumnBasis(column) {
 	var isOneAlreadyBeen = false;
+	var isBasis = true;
 
-	for (var j = 1; j <= matrix.colsNumber; j++) {
-		for (var i = 1; i <= matrix.rowsNumber; i++) {
-
-			if (matrix.getValue(i, j) != 0) {
-				if (matrix.getValue(i, j) != 1) {
-					isBasis = false;
-					break;
-				}
-				else {
-					if (!isOneAlreadyBeen) {
-						isOneAlreadyBeen = true;
-						isBasis = true;
-					}
-					else {
-						isBasis = false;
-						break;
-					}
-				}
-			}
-
-		}
-
-		if (isBasis) {
-			basisArray.push(j);
-			isBasis = false;
-		}
-
-		isOneAlreadyBeen = false;
-	}
-
-	return basisArray;
-}
-
-
-
-function getOutBasisColNumber(vector, basis) {
-	var outBasisColNumber;
-	for (var i = 1; i <= vector.colsNumber - 1; i++) {
-		if ( vector.getValue(1, i) == 1 ) {
-			outBasisColNumber = i;
-		}
-	}
-	
-	return outBasisColNumber;
-}
-
-
-
-function checkForNegativeInLastCol(vector) {
-	for (var i = 1; i <= vector.rowsNumber; i++) {
-		if (vector.getValue(i, 1) < 0) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-
-function getBasisRowColNumber(matrix) {
-	var min = matrix.getValue(1, matrix.colsNumber);
-	
-	var basisRowNumber = 1;
-
-	for (var i = 2; i < matrix.rowsNumber; i++) {
-		if (matrix.getValue(i, matrix.colsNumber) < min) {
-			min = matrix.getValue(i, matrix.colsNumber);
-			basisRowNumber = i;
-		}
-	}
-	
-	var row = matrix.getRow(basisRowNumber);
-	min = row.elements[0][0];
-	
-	var basisColNumber = 1;
-
-	for (var i = 1; i < row.elements[0].length; i++) {
-		if (row.elements[0][i] < min) {
-			min = row.elements[0][i];
-			basisColNumber = i + 1;
-		}
-	}
-
-	return { 'basisRowNumber': basisRowNumber, 'basisColNumber': basisColNumber };
-}
-
-
-function getMinNegativeAndBasisColNumber(vector) {
-	var min = vector.elements[0][0];
-	var basisColNumber = 1;
-
-	for (var i = 1; i < vector.elements[0].length - 1; i++) {
-		if (vector.elements[0][i] < min) {
-			min = vector.elements[0][i];
-			basisColNumber = i + 1;
-		}
-	}
-
-	return { 'minNegative': min, 'basisColNumber': basisColNumber };
-}
-
-
-function getBasisRowNumber(matrix, basisColNumber) {
-	var basisCol = matrix.getCol(basisColNumber);
-	var lastCol = matrix.getCol(matrix.colsNumber);
-
-	var basisRowNumber = 1;
-	var value = lastCol.getValue(1, 1) / basisCol.getValue(1, 1);
-	if (value < 0) {
-		value = 10000;												//near BUG!!!!!!!!!!!
-	}
-	for (var i = 2; i < matrix.rowsNumber; i++) {
-		var quotient = lastCol.getValue(i, 1) / basisCol.getValue(i, 1);
-		if (quotient <= 0) {
+	for (var i = 1; i <= column.rowsNumber; i++) {
+		if (column.getValue(i, 1) == 1 && isOneAlreadyBeen == false) {
+			isOneAlreadyBeen = true;
 			continue;
 		}
-		if (quotient < value) {
-			value = quotient;
-			basisRowNumber = i;
+		else if (column.getValue(i, 1) == 0) {
+			continue;
+		}
+		else {
+			isBasis = false;
+			break;
 		}
 	}
 
-	return basisRowNumber;
+	return isBasis;
 }
 
+function getJs(x, b) {
+	var bIndex = 1;
+	var Jb = [];
+	var Jn = [];
+	var J = [];
 
-
-function outputMatrix(matrix) {
-	var output = '<table class="table-bordered table-condensed"><tbody>';
-
-	for (var i = 0; i < matrix.rowsNumber; i++) {
-		output += '<tr>';
-		for (var j = 0; j < matrix.colsNumber; j++) {
-			output += '<td>' + floatToRat(matrix.elements[i][j]) + '</td>';
+	for (var i = 0; i < x.length; i++) {
+		if (x[i] == b.getValue(bIndex, 1)) {
+			Jb.push(i + 1);
+			bIndex++;
 		}
-		output += '</tr>';
+		else {
+			Jn.push(i + 1);
+		}
+		J.push(i + 1);
 	}
-
-	output += '</tbody></table>';
-	return output;
+	return {'Jb': Jb, 'Jn': Jn, 'J': J};
 }
 
+function getBasisMatrix(A, Jb) {
+	var JbIndex = 0;
+	var array = [];
 
-
-function isFloat(n) {
-   return n % 1 != 0;
-};
-
-
-
-
-function floatToRat(x) {
-	if (!isFloat(x)) {
-		return "" + x;
-	}
-    var tolerance = 1.0E-6;
-    var h1 = 1; 
-    var h2 = 0;
-    var k1 = 0; 
-    var k2 = 1;
-    var posX = Math.abs(x);
-    var b = posX;
-    do {
-        var a = Math.floor(b);
-        var aux = h1; 
-        h1 = a * h1 + h2; 
-        h2 = aux;
-        aux = k1;
-        k1 = a * k1 + k2; 
-        k2 = aux;
-        b = 1 / (b - a);
-    } while (Math.abs(posX - h1 / k1) > posX * tolerance);
-    
-    if (x < 0) {
-    	return "-" + h1 + "/" + k1;
-    }
-
-    return h1 + "/" + k1;
-};
-
-
-
-function roundMatrix(matrix, epsilon) {
-	for (var i = 1; i <= matrix.rowsNumber; i++) {
-		for (var j = 1; j <= matrix.colsNumber; j++) {
-			if (Math.abs(matrix.getValue(i, j)) <= epsilon) {
-				matrix.insertValue(i, j, 0);
+	for (var i = 1; i <= A.colsNumber; i++) {
+		if (i == Jb[JbIndex]) {
+			array[JbIndex] = [];
+			for (var j = 1; j <= A.rowsNumber; j++) {
+				array[JbIndex].push(A.getValue(j, i));
 			}
+			JbIndex++;
 		}
 	}
+
+	return Matrix.createMatrixFromVectors(array, false);
+}
+
+function getCb(c, Jb) {
+	var JbIndex = 0;
+	var array = [];
+
+	for (var i = 1; i <= c.colsNumber; i++) {
+		if (i == Jb[JbIndex]) {
+			array.push(c.getValue(1, i));
+			JbIndex++;
+		}
+	}
+
+	return new Matrix(1, JbIndex, [array]);
+}
+
+function getDeltas(u, A, c, Jn) {
+	var deltas = [];
+
+	for (var i = 0; i < Jn.length; i++) {
+		deltas.push( u.multiply(A.getCol(Jn[i])).getValue(1, 1) - c.getValue(1, Jn[i]) );
+	}
+
+	return deltas;
+}
+
+function getNewJn(J, Jb) {
+	var JbIndex = 0;
+	var newJn = [];
+
+	for (var i = 0; i < J.length; i++) {
+		if (J[i] != Jb[JbIndex]) {
+			newJn.push(J[i]);
+		}
+		else {
+			JbIndex++;
+		}
+	}
+
+	return newJn;
 }
