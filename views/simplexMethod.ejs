@@ -3,12 +3,314 @@
 <section class="container">
     
     <h3>Simplex Method</h3>
-    <p><a href="http://en.wikipedia.org/wiki/Simplex_algorithm" target="_blank">About Simplex Method</a></p>
+    <hr>
+    <div class="simplex_exp"> 
+	    <p>Cx -> max/min</p>
+	    <p>Ax = b</p>
+	    <p>x >= 0</p>
+	    <p>with A = (a<sub>ij</sub>, i &isin; I, j &isin; J) - matrix; c = (c<sub>j</sub>, j &isin; J), b = (b<sub>i</sub>, i &isin; I), x = (x<sub>j</sub>, j &isin; J) - vectors;</p>
+	    <p>J = {1, 2, ..., n}, I = {1, 2, ..., m}, m <= n</p>
+	</div>
+	<hr>
 
-    <p>User Input in Progress...</p>
+	<div class="formContainer simplexNM">
 
-    <form role="form" action="/simplexMethod/calculate" method="POST" class="matrixForm">
+		<div class="alert alert-danger" role="alert">
+		  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+		  m must be less or equal n
+		</div>
+
+		<span>m:</span>
+	    <select class="form-control matrixDimensionSelect" id="m">
+			<option>1</option>
+			<option>2</option>
+			<option selected="selected">3</option>
+			<option>4</option>
+			<option>5</option>
+			<option>6</option>
+			<option>7</option>
+			<option>8</option>
+			<option>9</option>
+			<option>10</option>
+			<option>11</option>
+			<option>12</option>
+			<option>13</option>
+			<option>14</option>
+			<option>15</option>
+			<option>16</option>
+			<option>17</option>
+			<option>18</option>
+			<option>19</option>
+			<option>20</option>
+			<option>21</option>
+			<option>22</option>
+			<option>23</option>
+			<option>24</option>
+			<option>25</option>
+			<option>26</option>
+			<option>27</option>
+			<option>28</option>
+			<option>29</option>
+			<option>30</option>
+			<option>31</option>
+			<option>32</option>
+			<option>33</option>
+			<option>34</option>
+			<option>35</option>
+			<option>36</option>
+			<option>37</option>
+			<option>38</option>
+			<option>39</option>
+			<option>40</option>
+			<option>41</option>
+			<option>42</option>
+			<option>43</option>
+			<option>44</option>
+			<option>45</option>
+			<option>46</option>
+			<option>47</option>
+			<option>48</option>
+			<option>49</option>
+			<option>50</option>
+		</select>
+
+		<span>n:</span>
+	    <select class="form-control matrixDimensionSelect" id="n">
+			<option>1</option>
+			<option>2</option>
+			<option>3</option>
+			<option>4</option>
+			<option selected="selected">5</option>
+			<option>6</option>
+			<option>7</option>
+			<option>8</option>
+			<option>9</option>
+			<option>10</option>
+			<option>11</option>
+			<option>12</option>
+			<option>13</option>
+			<option>14</option>
+			<option>15</option>
+			<option>16</option>
+			<option>17</option>
+			<option>18</option>
+			<option>19</option>
+			<option>20</option>
+			<option>21</option>
+			<option>22</option>
+			<option>23</option>
+			<option>24</option>
+			<option>25</option>
+			<option>26</option>
+			<option>27</option>
+			<option>28</option>
+			<option>29</option>
+			<option>30</option>
+			<option>31</option>
+			<option>32</option>
+			<option>33</option>
+			<option>34</option>
+			<option>35</option>
+			<option>36</option>
+			<option>37</option>
+			<option>38</option>
+			<option>39</option>
+			<option>40</option>
+			<option>41</option>
+			<option>42</option>
+			<option>43</option>
+			<option>44</option>
+			<option>45</option>
+			<option>46</option>
+			<option>47</option>
+			<option>48</option>
+			<option>49</option>
+			<option>50</option>
+		</select>
+
+		<button type="submit" class="btn btn-default" id="go">Go!</button>
+
+	</div>
+
+	<hr>
+
+    <!-- <form role="form" action="/simplexMethod/calculate" method="POST" class="matrixForm">
 		<button type="submit" class="btn btn-default">Calculate</button>
-	</form>
+	</form> -->
+
+	<div class="simplexForm">
+	</div>
+	
+	
+	
+
+
+
+
+	<script>
+
+		$(".alert").hide();
+
+		$("#go").click(function() {
+			var m = +$("#m").val();
+			var n = +$("#n").val();
+			if (m > n) {
+				$(".alert").show();
+			}
+			else {
+				$(".alert").hide();
+				$(".simplexForm form").remove();
+				createForms(m, n);
+			}
+		});
+
+
+		$(document).on('submit', $(".simplexForm form"), function(e) {
+			var inputValue;
+			var isError = false;
+			
+			clearCells();
+
+			$(".matrixForm table tbody input").each(function() {
+				try {
+					inputValue = math.eval($(this).val());
+				}
+				catch(err) {
+					$(this).addClass("input_error");
+					isError = true;
+					
+				}
+				console.log(inputValue);
+			});
+
+			if (isError || checkForEmptiness()) {
+				e.preventDefault(); 		// Cancel the submit
+            	return false;
+			}
+		});
+
+
+
+		$(".reset").click(function() {
+			clearCells();
+		});
+
+
+
+		function checkForEmptiness() {
+			var isEmpty = false;
+			$(".matrixForm table tbody input").each(function() {
+				if ($(this).val() == '') {
+					isEmpty = true;
+					$(this).addClass("input_error");
+				}	
+			});
+			return isEmpty;
+		}
+
+
+		function clearCells() {
+			$(".matrixForm table tbody input.input_error").each(function() {
+				$(this).removeClass("input_error");	
+			});
+		}
+
+
+		function createForms(m, n) {
+			var form = '<form role="form" action="/simplexMethod/calculate" method="POST" class="matrixForm">';
+			form += '<span class="matrixNames">A:</span><table class="table"><tbody><tr><th>#</th>';
+			
+			for (var i = 1; i <= n; i++) {
+				form += '<th>' + i + '</th>';
+			}
+			form += '</tr>';
+
+			for (var i = 1; i <= m; i++) {
+				form += '<tr>';
+				for (var j = 1; j <= n; j++) {
+					if (j == 1) {
+						form += '<th>' + i + '</th>';
+					}
+					form += '<td><input type="text" size="35" onkeypress="return numbersOnly(this, event)" class="form-control" name="matrixElementi' + i + 'j' + j + '"></td>';
+				}
+				form += '</tr>';
+			}
+
+			form += '</tbody></table>';
+
+
+
+			form += '<hr><span class="matrixNames">b:</span><table class="table tableB"><tbody><tr><th>#</th>';
+			form += '<th></th>';
+			form += '</tr>';
+
+			for (var i = 1; i <= m; i++) {
+				form += '<tr>';
+				form += '<th>' + i + '</th>';
+				form += '<td><input type="text" size="35" onkeypress="return numbersOnly(this, event)" class="form-control" name="bi' + i + '"></td>';
+				form += '</tr>';
+			}
+
+			form += '</tbody></table>';
+
+
+			form += '<hr><span class="matrixNames">c:</span><table class="table"><tbody><tr><th>#</th>';
+			for (var i = 1; i <= n; i++) {
+				form += '<th>' + i + '</th>';
+			}
+			form += '</tr>';
+
+			form += '<tr>';
+			for (var j = 1; j <= n; j++) {
+				if (j == 1) {
+					form += '<th></th>';
+				}
+				form += '<td><input type="text" size="35" onkeypress="return numbersOnly(this, event)" class="form-control" name="cj' + j + '"></td>';
+			}
+			form += '</tr>';
+
+			form += '</tbody></table><button type="reset" class="btn btn-default reset">Reset</button>';
+			form += '<input type="hidden" name="m" value="' + m + '" id="mField">';
+			form += '<input type="hidden" name="n" value="' + n + '" id="nField">';
+			form += '<button type="submit" class="btn btn-default submitButton">Calculate</button></form>';
+
+			$(".simplexForm").append(form);
+
+
+		}
+
+
+
+		function numbersOnly(field, e, dec) {
+			var key;
+			var keychar;
+
+			if (window.event)
+			   key = window.event.keyCode;
+			else if (e)
+			   key = e.which;
+			else
+			   return true;
+			keychar = String.fromCharCode(key);
+
+			// control keys
+			if ((key==null) || (key==0) || (key==8) || 
+			    (key==9) || (key==13) || (key==27) )
+			   return true;
+
+			// numbers
+			else if ((("0123456789./-+*()").indexOf(keychar) > -1))
+			   return true;
+
+			// decimal point jump
+			else if (dec && (keychar == ".")) {
+			   field.form.elements[dec].focus();
+			   return false;
+			}
+			else
+			   return false;
+		}
+
+	</script>
     
 </section> 

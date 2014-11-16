@@ -89,6 +89,10 @@ a {
 	min-width: 50px;
 }
 
+.simplex_exp {
+	font-size: 18px;
+}
+
 /*remove arrows in input type=number*/
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -102,4 +106,41 @@ input::-webkit-inner-spin-button {
 		float: none;
 		margin-top: 15px;
 	}
+}
+
+.simplexNM select,.simplexNM button {
+	margin: 0 10px;
+}
+
+.matrixNames {
+	font-size: 20px;
+	margin-bottom: 10px;
+	font-weight: bold;
+}
+
+.tableB {
+	width: auto;
+}
+
+.simplexForm {
+	overflow: auto;
+	padding: 10px;
+}
+
+.basis {
+	display: block;
+	margin: 10px 0;
+	font-size: 18px;
+}
+
+.result {
+	margin: 20px 0;
+	font-size: 22px;
+	color: blue;
+}
+
+.next {
+	font-style: italic;
+	font-size: 16px;
+	color: #4BAC3E;
 }

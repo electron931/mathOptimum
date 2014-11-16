@@ -4,6 +4,7 @@ var helper = require('../libs/helper');
 
 
 var EPSILON = 0.00000000001;
+var MAX_NUMBER_OF_ITERATIONS = 100000000;
 
 exports.get = function(req, res) {
     res.render('simplexMethod');
@@ -11,11 +12,68 @@ exports.get = function(req, res) {
 
 exports.post = function(req, res) {
 
-	var m = 3;
-	var n = 6;
-	var b = new Matrix(m, 1, [[240], [200], [160]]);
-	var A = new Matrix(m, n, [[2, 3, 6, 1, 0, 0], [4, 2, 4, 0, 1, 0], [4, 6, 8, 0, 0, 1]]);
-	var c = new Matrix(1, n, [[4, 5, 4, 0, 0, 0]]);
+	var m = +req.body.m;
+	var n = +req.body.n;
+
+	if (m > n) {
+		res.end('m must be less or equal n');
+		return;
+	}
+
+	var elements = [];
+
+	for (var element in req.body) {
+		elements.push( req.body[element] );
+	}
+
+	var offset = 0;
+
+	var arrayA = [];
+	for (var i = 0; i < m; i++) {
+		arrayA[i] = [];
+		for (var j = 0; j < n; j++) {
+			arrayA[i].push( mathjs.eval(elements[n * i + j ]) );
+			offset++;
+		}
+	}
+
+
+	var arrayB = [];
+	for (var i = 0; i < m; i++) {
+		arrayB[i] = [];
+		arrayB[i].push( mathjs.eval(elements[ offset ]) );
+		offset++;
+	}
+
+	var arrayC = [];
+	for (var i = 0; i < n; i++) {
+		arrayC.push( mathjs.eval(elements[ offset ]) );
+		offset++;
+	}
+
+
+	var b = new Matrix(m, 1, arrayB);
+	var A = new Matrix(m, n, arrayA);
+	var c = new Matrix(1, n, [arrayC]);
+
+	var output = '';
+
+	output += '<h2>Input:</h2>';
+	output += '<div class="alpha"><span class="imp">A = </span>';
+	output += helper.outputMatrix(A);
+	output += '</div>';
+
+	output += '<div class="alpha"><span class="imp">b = </span>';
+	output += helper.outputMatrix(b);
+	output += '</div>';
+
+	output += '<div class="alpha"><span class="imp">c = </span>';
+	output += helper.outputMatrix(c);
+	output += '</div>';
+	output += '<hr>';
+	output += '<h2>Begin!</h2>';
+	output += '<hr>';
+
 	var Ai = getMatrixColumns(A);
 	var x = getBasisPlan(Ai, b);
 	var Js = getJs(x, b);
@@ -28,11 +86,26 @@ exports.post = function(req, res) {
 
 	var count = 0;
 
-	while (true && count < 100) {
+	while (true && count < MAX_NUMBER_OF_ITERATIONS) {
+		output += '<span class="basis">Jb: ' + Jb  + '</span>';
+		output += '<span class="basis">X: ' + roundArray(x)  + '</span>';
+
+		output += '<div class="alpha"><span class="imp">Ab = </span>';
+		output += helper.outputMatrix(Ab);
+		output += '</div>';
+
+		output += '<div class="alpha"><span class="imp">B = </span>';
+		output += helper.outputMatrix(B);
+		output += '</div>';
+
 		count++;
 		var cb = getCb(c, Jb);
 		var u = cb.multiply(B);
+		output += '<div class="alpha"><span class="imp">u = </span>';
+		output += helper.outputMatrix(u);
+		output += '</div>';
 		var deltas = getDeltas(u, A, c, Jn);
+		output += '<span class="basis">Deltas: ' + roundArray(deltas)  + '</span>';
 		var stop = true;
 		var minDelta;
 		var j0;
@@ -52,11 +125,22 @@ exports.post = function(req, res) {
 
 		if (stop) {		//STOP
 			console.log('Optimum has been found: ' + x);
+			output += '<h4>STOP</h4>'
+			output += '<p class="result">Optimum has been found!</p>';
+			output += '<p class="result">X = ' + roundArray(x) + '</p>';
+
+			var xColumn = Matrix.createMatrixFromVectors([x], false);
+			var optimum = c.multiply(xColumn).getValue(1, 1);
+			output += '<p class="result">Optimum = ' + optimum + '</p>';
+
 			break;
 		}
 
 		//step 3
 		var z  = B.multiply(A.getCol(j0));
+		output += '<div class="alpha"><span class="imp">z = </span>';
+		output += helper.outputMatrix(z);
+		output += '</div>';
 		var hasSolution = false;
 		for (var i = 1; i <= z.rowsNumber; i++) {
 			if (z.getValue(i, 1) > 0) {
@@ -67,6 +151,8 @@ exports.post = function(req, res) {
 
 		if (!hasSolution) {		//STOP
 			console.log('No solution');
+			output += '<h4>STOP</h4>'
+			output += '<p class="result">No solution</p>';
 			break;
 		}
 
@@ -117,10 +203,14 @@ exports.post = function(req, res) {
 		Q = undefined;
 		s = undefined;
 		j0 - undefined;
+
+		output += '<hr>'
+		output += '<p class="next">next iteration</p>'
+		output += '<hr>'
 	}
 
 
-	res.end('All right');
+	res.render('simplexMethodCalculate', {output: output});
 }
 
 
@@ -163,7 +253,7 @@ function isColumnBasis(column) {
 	var isBasis = true;
 
 	for (var i = 1; i <= column.rowsNumber; i++) {
-		if (column.getValue(i, 1) == 1 && isOneAlreadyBeen == false) {
+		if (Math.abs(column.getValue(i, 1)) == 1 && isOneAlreadyBeen == false) {
 			isOneAlreadyBeen = true;
 			continue;
 		}
@@ -253,4 +343,14 @@ function getNewJn(J, Jb) {
 	}
 
 	return newJn;
+}
+
+
+function roundArray(array) {
+	var roundedArr = [];
+	for (var i = 0; i < array.length; i++) {
+		roundedArr.push(Math.round(array[i] * 100) / 100);
+	}
+
+	return roundedArr;
 }
