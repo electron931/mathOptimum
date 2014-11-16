@@ -192,12 +192,13 @@ exports.post = function(req, res) {
 
 		var JsIndex = Jb.indexOf(Js);
 		Jb[JsIndex] = j0;
-		Jb.sort();
+		Jb.sort(compareNumbers);
 
 		Jn = getNewJn(J, Jb);
 
 		//step 6
 		Ab = getBasisMatrix(A, Jb);
+		console.log(Ab);
 		B = Ab.inverse();
 
 		Q = undefined;
@@ -302,6 +303,8 @@ function getBasisMatrix(A, Jb) {
 		}
 	}
 
+	console.log(Jb);
+
 	return Matrix.createMatrixFromVectors(array, false);
 }
 
@@ -353,4 +356,8 @@ function roundArray(array) {
 	}
 
 	return roundedArr;
+}
+
+function compareNumbers(a, b) {
+    return a - b;
 }
