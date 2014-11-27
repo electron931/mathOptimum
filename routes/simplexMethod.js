@@ -51,6 +51,12 @@ exports.post = function(req, res) {
 		offset++;
 	}
 
+	var x = [];
+	for (var i = 0; i < n; i++) {
+		x.push( mathjs.eval(elements[ offset ]) );
+		offset++;
+	}
+
 
 	var b = new Matrix(m, 1, arrayB);
 	var A = new Matrix(m, n, arrayA);
@@ -70,12 +76,14 @@ exports.post = function(req, res) {
 	output += '<div class="alpha"><span class="imp">c = </span>';
 	output += helper.outputMatrix(c);
 	output += '</div>';
+	output += '<span class="basis">X (Initial Basis Plan): ' + roundArray(x)  + '</span>';
 	output += '<hr>';
+
 	output += '<h2>Begin!</h2>';
 	output += '<hr>';
 
+	//second phase
 	var Ai = getMatrixColumns(A);
-	var x = getBasisPlan(Ai, b);
 	var Js = getJs(x, b);
 	var Jb = Js.Jb;
 	var Jn = Js.Jn;
@@ -87,8 +95,14 @@ exports.post = function(req, res) {
 	var count = 0;
 
 	while (true && count < MAX_NUMBER_OF_ITERATIONS) {
+		count++;
 		output += '<span class="basis">Jb: ' + Jb  + '</span>';
 		output += '<span class="basis">X: ' + roundArray(x)  + '</span>';
+
+		if (!B) {				//!!
+			Ab = Ab.getIdentityMatrix(Ab.rowsNumber);
+			B = Ab;
+		}
 
 		output += '<div class="alpha"><span class="imp">Ab = </span>';
 		output += helper.outputMatrix(Ab);
@@ -98,8 +112,8 @@ exports.post = function(req, res) {
 		output += helper.outputMatrix(B);
 		output += '</div>';
 
-		count++;
 		var cb = getCb(c, Jb);
+		console.log(Jb);
 		var u = cb.multiply(B);
 		output += '<div class="alpha"><span class="imp">u = </span>';
 		output += helper.outputMatrix(u);
@@ -145,6 +159,7 @@ exports.post = function(req, res) {
 		for (var i = 1; i <= z.rowsNumber; i++) {
 			if (z.getValue(i, 1) > 0) {
 				hasSolution = true;
+				break;
 			}
 		}
 
@@ -174,6 +189,7 @@ exports.post = function(req, res) {
 		}
 
 
+
 		var Js = Jb[s - 1];
 
 
@@ -187,18 +203,18 @@ exports.post = function(req, res) {
 		}
 		x[j0 - 1] = Q;
 		for (var i = 0; i < Jb.length; i++) {
-			x[Jb[i] - 1] = x[Jb[i ] - 1] - Q * z.getValue(i + 1, 1);
+			x[Jb[i] - 1] = x[Jb[i] - 1] - Q * z.getValue(i + 1, 1);
 		}
 
 		var JsIndex = Jb.indexOf(Js);
 		Jb[JsIndex] = j0;
-		Jb.sort(compareNumbers);
+
+		//Jb.sort(compareNumbers);
 
 		Jn = getNewJn(J, Jb);
 
 		//step 6
 		Ab = getBasisMatrix(A, Jb);
-		console.log(Ab);
 		B = Ab.inverse();
 
 		Q = undefined;
@@ -208,7 +224,7 @@ exports.post = function(req, res) {
 		output += '<hr>'
 		output += '<p class="next">next iteration</p>'
 		output += '<hr>'
-	}
+	}		//end while
 
 
 	res.render('simplexMethodCalculate', {output: output});
@@ -233,42 +249,6 @@ function getMatrixColumns(matrix) {
 	return matrixColumns;
 }
 
-function getBasisPlan(matrixColumns, b) {
-	var bIndex = 1;
-	var x = [];
-	for (var i = 0; i < matrixColumns.length; i++) {
-		if (isColumnBasis(matrixColumns[i])) {
-			x.push(b.getValue(bIndex, 1));
-			bIndex++;
-		}
-		else {
-			x.push(0);
-		}
-	}
-
-	return x;
-}
-
-function isColumnBasis(column) {
-	var isOneAlreadyBeen = false;
-	var isBasis = true;
-
-	for (var i = 1; i <= column.rowsNumber; i++) {
-		if (Math.abs(column.getValue(i, 1)) == 1 && isOneAlreadyBeen == false) {
-			isOneAlreadyBeen = true;
-			continue;
-		}
-		else if (column.getValue(i, 1) == 0) {
-			continue;
-		}
-		else {
-			isBasis = false;
-			break;
-		}
-	}
-
-	return isBasis;
-}
 
 function getJs(x, b) {
 	var bIndex = 1;
@@ -277,7 +257,8 @@ function getJs(x, b) {
 	var J = [];
 
 	for (var i = 0; i < x.length; i++) {
-		if (x[i] == b.getValue(bIndex, 1)) {
+		//if (x[i] == b.getValue(bIndex, 1)) {
+		if (x[i] != 0) {
 			Jb.push(i + 1);
 			bIndex++;
 		}
@@ -290,36 +271,26 @@ function getJs(x, b) {
 }
 
 function getBasisMatrix(A, Jb) {
-	var JbIndex = 0;
 	var array = [];
 
-	for (var i = 1; i <= A.colsNumber; i++) {
-		if (i == Jb[JbIndex]) {
-			array[JbIndex] = [];
-			for (var j = 1; j <= A.rowsNumber; j++) {
-				array[JbIndex].push(A.getValue(j, i));
-			}
-			JbIndex++;
+	for (var i = 0; i < Jb.length; i++) {
+		array[i] = [];
+		for (var j = 1; j <= A.rowsNumber; j++) {
+			array[i].push(A.getValue(j, Jb[i]));
 		}
 	}
-
-	console.log(Jb);
 
 	return Matrix.createMatrixFromVectors(array, false);
 }
 
 function getCb(c, Jb) {
-	var JbIndex = 0;
 	var array = [];
 
-	for (var i = 1; i <= c.colsNumber; i++) {
-		if (i == Jb[JbIndex]) {
-			array.push(c.getValue(1, i));
-			JbIndex++;
-		}
+	for (var i = 0; i < Jb.length; i++) {
+		array.push(c.getValue(1, Jb[i]));
 	}
 
-	return new Matrix(1, JbIndex, [array]);
+	return new Matrix(1, Jb.length, [array]);
 }
 
 function getDeltas(u, A, c, Jn) {
@@ -337,7 +308,7 @@ function getNewJn(J, Jb) {
 	var newJn = [];
 
 	for (var i = 0; i < J.length; i++) {
-		if (J[i] != Jb[JbIndex]) {
+		if (!contains(Jb, J[i])) {						//!!
 			newJn.push(J[i]);
 		}
 		else {
@@ -358,6 +329,11 @@ function roundArray(array) {
 	return roundedArr;
 }
 
-function compareNumbers(a, b) {
-    return a - b;
-}
+function contains(a, obj) {
+    for (var index = 0; index < a.length; index++) {
+        if (a[index] === obj) {
+            return true;
+        }
+    }
+    return false;
+};

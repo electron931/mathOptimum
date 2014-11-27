@@ -59,6 +59,37 @@ method.getIdentityMatrix = function(dimension) {
 	return new Matrix(dimension, dimension, array);
 }
 
+method.add = function(matrix) {
+	if (this.rowsNumber == matrix.rowsNumber && this.colsNumber == matrix.colsNumber) {
+		var array = [];
+
+		for (var i = 1; i <= this.rowsNumber; i++) {
+			array[i - 1] = [];
+			for (var j = 1; j <= this.colsNumber; j++) {
+				array[i - 1].push( this.getValue(i, j) + matrix.getValue(i, j) );
+			}
+		}
+
+		return new Matrix(this.rowsNumber, this.colsNumber, array);
+	}
+	else {
+		return false;
+	}
+}
+
+method.multiplyNumber = function(number) {
+	var array = [];
+	
+	for (var i = 1; i <= this.rowsNumber; i++) {
+		array[i - 1] = [];
+		for (var j = 1; j <= this.colsNumber; j++) {
+			array[i - 1].push( this.getValue(i, j) * number );
+		}
+	}
+
+	return new Matrix(this.rowsNumber, this.colsNumber, array);
+}
+
 method.multiply = function(matrix) {
 	if (this.colsNumber != matrix.rowsNumber) {
 		return false;
@@ -81,6 +112,19 @@ method.multiply = function(matrix) {
 	}
 
 	return new Matrix(this.rowsNumber, matrix.colsNumber, array);
+}
+
+method.transpose = function() {
+	var newArray = [];
+
+	for (var i = 1; i <= this.colsNumber; i++) {
+		newArray[i - 1] = [];
+		for (var j = 1; j <= this.rowsNumber; j++) {
+			newArray[i - 1].push(this.getValue(j, i));
+		}
+	}
+
+	return new Matrix(this.colsNumber, this.rowsNumber, newArray);
 }
 
 method.inverse = function() {

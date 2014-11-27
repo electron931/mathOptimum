@@ -2,13 +2,13 @@
 
 <section class="container">
     
-    <h3>Simplex Method</h3>
+    <h3>Dual Simplex Method</h3>
     <hr>
     <div class="simplex_exp"> 
-	    <p>Cx -> max/min</p>
-	    <p>Ax = b</p>
-	    <p>x >= 0</p>
-	    <p>with A = (a<sub>ij</sub>, i &isin; I, j &isin; J) - matrix; c = (c<sub>j</sub>, j &isin; J), b = (b<sub>i</sub>, i &isin; I), x = (x<sub>j</sub>, j &isin; J) - vectors;</p>
+	    <p>&beta;y -> min</p>
+	    <p>A'y >= b</p>
+	    <p>y >= 0</p>
+	    <p>with A = (a<sub>ij</sub>, i &isin; I, j &isin; J) - matrix; b = (b<sub>i</sub>, i &isin; I), x = (x<sub>j</sub>, j &isin; J) - vectors;</p>
 	    <p>J = {1, 2, ..., n}, I = {1, 2, ..., m}, m <= n</p>
 	    <p class="impNote">Important note: in this version you must calculate and provide initial basis plan</p>
 	</div>
@@ -214,7 +214,7 @@
 
 
 		function createForms(m, n) {
-			var form = '<form role="form" action="/simplexMethod/calculate" method="POST" class="matrixForm">';
+			var form = '<form role="form" action="/dualSimplexMethod/calculate" method="POST" class="matrixForm">';
 			form += '<span class="matrixNames">A:</span><table class="table"><tbody><tr><th>#</th>';
 			
 			for (var i = 1; i <= n; i++) {
@@ -268,20 +268,39 @@
 			form += '</tbody></table>';
 
 
-			form += '<hr><span class="matrixNames">x (initial basic plan):</span><table class="table"><tbody><tr><th>#</th>';
-			for (var i = 1; i <= n; i++) {
+			form += '<hr><span class="matrixNames">y (initial basic dual plan):</span><table class="table"><tbody><tr><th>#</th>';
+			for (var i = 1; i <= m; i++) {
 				form += '<th>' + i + '</th>';
 			}
 			form += '</tr>';
 
 			form += '<tr>';
-			for (var j = 1; j <= n; j++) {
+			for (var j = 1; j <= m; j++) {
 				if (j == 1) {
 					form += '<th></th>';
 				}
-				form += '<td><input type="text" size="35" onkeypress="return numbersOnly(this, event)" class="form-control" name="xj' + j + '"></td>';
+				form += '<td><input type="text" size="35" onkeypress="return numbersOnly(this, event)" class="form-control" name="yj' + j + '"></td>';
 			}
 			form += '</tr>';
+			form += '</tbody></table>';
+
+
+
+			form += '<hr><span class="matrixNames">Jb (basic set):</span><table class="table"><tbody><tr><th>#</th>';
+			for (var i = 1; i <= m; i++) {
+				form += '<th>' + i + '</th>';
+			}
+			form += '</tr>';
+
+			form += '<tr>';
+			for (var j = 1; j <= m; j++) {
+				if (j == 1) {
+					form += '<th></th>';
+				}
+				form += '<td><input type="text" size="35" onkeypress="return numbersOnly(this, event)" class="form-control" name="jbj' + j + '"></td>';
+			}
+			form += '</tr>';
+
 
 
 
